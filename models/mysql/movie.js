@@ -14,14 +14,20 @@ const DEFAULT_CONFIG = {
 
 const config = process.env.DATABASE_URL ?? DEFAULT_CONFIG;
 
-const connection = await mysql.createConnection(config);
-
 export class MovieModel {
+  static connection = null;
+  static async initConnection() {
+    if (!MovieModel.connection) {
+      MovieModel.connection = await mysql.createConnection(config);
+    }
+  }
   static async getAll({ genre }) {
+    await MovieModel.initConnection();
+
     if (genre) {
       const lowerCaseGenre = genre.toLowerCase();
 
-      const [genres] = await connection.query(
+      const [genres] = await MovieModel.connection.query(
         "SELECT id, name FROM genre WHERE LOWER(name) = ?",
         [lowerCaseGenre]
       );
@@ -31,7 +37,7 @@ export class MovieModel {
       }
 
       const [{ id }] = genres;
-      const [results] = await connection.query(
+      const [results] = await MovieModel.connection.query(
         `SELECT m.title, m.year, m.director, m.duration, m.poster, m.rate, BIN_TO_UUID(m.id) as id 
         FROM movie m 
         JOIN movie_genres mg ON m.id = mg.movie_id
@@ -42,7 +48,7 @@ export class MovieModel {
       return results;
     }
 
-    const [movies] = await connection.query(
+    const [movies] = await MovieModel.connection.query(
       `SELECT m.title, m.year, m.director, m.duration, m.poster, m.rate, 
        BIN_TO_UUID(m.id) AS id, 
        (SELECT GROUP_CONCAT(g.name) FROM genre g 
@@ -55,7 +61,9 @@ export class MovieModel {
   }
 
   static async getById({ id }) {
-    const [movie] = await connection.query(
+    await MovieModel.initConnection();
+
+    const [movie] = await MovieModel.connection.query(
       `SELECT title, year, director, duration, poster, rate,
      BIN_TO_UUID(id) id FROM movie
      WHERE id = UUID_TO_BIN(?);`,
@@ -68,6 +76,8 @@ export class MovieModel {
   }
 
   static async create({ input }) {
+    await MovieModel.initConnection();
+
     const {
       genre: genreInputs,
       title,
@@ -78,11 +88,13 @@ export class MovieModel {
       rate,
     } = input;
 
-    const [uuidResult] = await connection.query("SELECT UUID() uuid");
+    const [uuidResult] = await MovieModel.connection.query(
+      "SELECT UUID() uuid"
+    );
     const [{ uuid }] = uuidResult;
 
     try {
-      const [insertResult] = await connection.query(
+      const [insertResult] = await MovieModel.connection.query(
         `INSERT INTO movie (id, title, year, director, duration, poster, rate)
          VALUES(UUID_TO_BIN("${uuid}"), ?, ?, ?, ?, ?, ?);`,
         [title, year, director, duration, poster, rate]
@@ -92,7 +104,7 @@ export class MovieModel {
       const genreIds = [];
 
       for (const genreInput of genreInputs) {
-        const [genreIdResult] = await connection.query(
+        const [genreIdResult] = await MovieModel.connection.query(
           `SELECT id FROM genre WHERE name = ?`,
           [genreInput]
         );
@@ -106,7 +118,7 @@ export class MovieModel {
       }
 
       for (const genre_id of genreIds) {
-        await connection.query(
+        await MovieModel.connection.query(
           `INSERT INTO movie_genres (movie_id, genre_id)
            VALUES (UUID_TO_BIN(?), ?);`,
           [movieId, genre_id]
@@ -116,7 +128,7 @@ export class MovieModel {
       throw new Error(`Error creating a new movie, error: ${error}`);
     }
 
-    const [movie] = await connection.query(
+    const [movie] = await MovieModel.connection.query(
       `SELECT title, year, director, duration, poster, rate,
       BIN_TO_UUID(id) id FROM movie
       WHERE id = UUID_TO_BIN(?);`,
@@ -127,7 +139,9 @@ export class MovieModel {
   }
 
   static async delete({ id }) {
-    const [movie] = await connection.query(
+    await MovieModel.initConnection();
+
+    const [movie] = await MovieModel.connection.query(
       `DELETE FROM movie WHERE id = UUID_TO_BIN(?)`,
       [id]
     );
@@ -138,6 +152,8 @@ export class MovieModel {
   }
 
   static async patch({ id, input }) {
+    await MovieModel.initConnection();
+
     const { title, year, director, duration, poster, rate } = input;
 
     const fieldToUpdate = {};
@@ -166,7 +182,7 @@ export class MovieModel {
         break;
     }
 
-    const [movie] = await connection.query(
+    const [movie] = await MovieModel.connection.query(
       `UPDATE movie SET ? WHERE id = UUID_TO_BIN(?);`,
       [fieldToUpdate, id]
     );

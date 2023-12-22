@@ -18,4 +18,6 @@ export const createApp = ({ movieModel }) => {
   app.listen(PORT, () => {
     console.log(`app listening on port: http://localhost:${PORT}`);
   });
+
+  return app;
 };
