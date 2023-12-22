@@ -21,7 +21,7 @@
   ```
   3. **Run the Application Locally:**
   ```js
-  npm start:mysql
+  npm run start:mysql
   ```
 + The application will run locally, allowing you to interact with the API through tools like Thunder client, Postman, or any preferred API testing tool.
 + Please note that the API is currently optimized for local testing. In the future, I plan to deploy the API to a server, making it accessible for browser usage or data fetching in separate projects. Stay tuned for updates on deployment status and additional features!
