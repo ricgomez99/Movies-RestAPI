@@ -25,8 +25,10 @@ export class MovieController {
   create = async (req, res) => {
     const result = validateSchema(req.body);
 
-    if (result.error) {
-      res.status(400).json({ message: JSON.parse(result.error.message) });
+    if (result.error || !req.body) {
+      res.status(400).json({
+        message: JSON.parse(result.error.message),
+      });
     }
 
     const newMovie = await this.movieModel.create({ input: result.data });
@@ -41,7 +43,7 @@ export class MovieController {
       return res.status(404).json({ message: "Movie not found" });
     }
 
-    return res.json({ message: "Movie deleted" });
+    return res.status(200).json({ message: "Movie deleted" });
   };
 
   update = async (req, res) => {
