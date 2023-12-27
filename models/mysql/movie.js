@@ -125,7 +125,7 @@ export class MovieModel {
         );
       }
     } catch (error) {
-      throw new Error(`Error creating a new movie, error: ${error}`);
+      throw new Error(`Unable to create a new movie, ${error}`);
     }
 
     const [movie] = await MovieModel.connection.query(
@@ -135,19 +135,31 @@ export class MovieModel {
       [uuid]
     );
 
-    return movie;
+    return movie[0];
   }
 
   static async delete({ id }) {
-    await MovieModel.initConnection();
+    try {
+      await MovieModel.initConnection();
+      const [findId] = await MovieModel.connection.query(
+        `SELECT BIN_TO_UUID(id) id FROM movie WHERE id = UUID_TO_BIN(?)`,
+        [id]
+      );
 
-    const [movie] = await MovieModel.connection.query(
-      `DELETE FROM movie WHERE id = UUID_TO_BIN(?)`,
-      [id]
-    );
+      const movieId = findId.length > 0 ? findId[0].id : null;
 
-    if (movie.length === 0) {
-      return false;
+      if (movieId) {
+        const [movie] = await MovieModel.connection.query(
+          `DELETE FROM movie WHERE id = UUID_TO_BIN(?)`,
+          [id]
+        );
+
+        movie.affectedRows > 0 ? true : false;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      throw new Error(`Unable to delete movie with id: ${id}`);
     }
   }
 
