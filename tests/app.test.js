@@ -28,9 +28,9 @@ describe("GET /movies", () => {
 });
 
 describe("GET /movies/:id", () => {
-  it("should return a json containing a single user", (done) => {
+  it("should return a json containing a single movie", (done) => {
     request(app)
-      .get("/movies/b909639c-93b4-11ee-9439-ceb4afa73033")
+      .get("/movies/254b8096-b6fc-11ee-92b7-b6ca7bc4c828")
       .set("Accept", "application/json")
       .expect("Content-Type", /json/)
       .expect(200, done);
