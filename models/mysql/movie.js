@@ -1,24 +1,14 @@
 // Use mysql2 dependecy -> npm i mysql2
-import mysql from "mysql2/promise";
 import "dotenv/config";
+import { pool } from "./db/connection.js";
 
 // Connection setup
-
-const DEFAULT_CONFIG = {
-  host: "localhost",
-  user: "root",
-  port: 3306,
-  password: "",
-  database: "moviesdb",
-};
-
-const config = process.env.DATABASE_URL ?? DEFAULT_CONFIG;
 
 export class MovieModel {
   static connection = null;
   static async initConnection() {
     if (!MovieModel.connection) {
-      MovieModel.connection = await mysql.createConnection(config);
+      MovieModel.connection = pool;
     }
   }
   static async getAll({ genre }) {
