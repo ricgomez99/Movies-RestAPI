@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "jest",
-    "start:mysql": "nodemon ./server-with-mysql.js"
+    "dev:mysql": "nodemon ./server-with-mysql.js",
+    "start": "node ./server-with-mysql.js"
   },
   "jest": {
     "testEnvironment": "node",
